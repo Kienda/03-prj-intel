@@ -1,22 +1,22 @@
-// Detect RTL languages and apply page direction automatically.
+// Detect RTL language tags and apply page direction without changing the content language.
 const rtlLanguages = ['ar', 'he', 'fa', 'ur'];
+
+function getPrimaryLanguage(languageTag) {
+  return (languageTag || 'en').toLowerCase().split('-')[0];
+}
+
+function setAttributeIfChanged(element, attributeName, value) {
+  if (element.getAttribute(attributeName) !== value) {
+    element.setAttribute(attributeName, value);
+  }
+}
 
 function updatePageDirection() {
   const htmlElement = document.documentElement;
-  const languageTag = htmlElement.getAttribute('lang') || navigator.language || 'en';
-  const primaryLanguage = languageTag.toLowerCase().split('-')[0];
+  const primaryLanguage = getPrimaryLanguage(htmlElement.getAttribute('lang'));
+  const direction = rtlLanguages.includes(primaryLanguage) ? 'rtl' : 'ltr';
 
-  if (rtlLanguages.includes(primaryLanguage)) {
-    htmlElement.setAttribute('dir', 'rtl');
-    htmlElement.setAttribute('lang', primaryLanguage);
-    htmlElement.style.textAlign = 'right';
-    document.body.style.textAlign = 'right';
-  } else {
-    htmlElement.setAttribute('dir', 'ltr');
-    htmlElement.setAttribute('lang', primaryLanguage);
-    htmlElement.style.textAlign = 'left';
-    document.body.style.textAlign = 'left';
-  }
+  setAttributeIfChanged(htmlElement, 'dir', direction);
 }
 
 const observer = new MutationObserver((mutations) => {
@@ -27,7 +27,9 @@ const observer = new MutationObserver((mutations) => {
   }
 });
 
-observer.observe(document.documentElement, { attributes: true });
+observer.observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ['lang'],
+});
 
 document.addEventListener('DOMContentLoaded', updatePageDirection);
-window.addEventListener('load', updatePageDirection);
